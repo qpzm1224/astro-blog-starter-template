@@ -1,85 +1,125 @@
 ---
-import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
+import type { CollectionEntry } from "astro:content";
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<"blog">["data"];
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	prompt,
+	tools = [],
+	tags = [],
+	client,
+} = Astro.props;
+
+const published = pubDate
+	? new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "short" }).format(pubDate)
+	: null;
+const updated = updatedDate
+	? new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "short" }).format(updatedDate)
+	: null;
 ---
 
-<html lang="en">
+<html lang="zh-CN">
 	<head>
 		<BaseHead title={title} description={description} />
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-		</style>
 	</head>
-
 	<body>
 		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
+		<main class="work-detail-page">
+			<article class="work-detail">
+				<div class="work-detail__hero">
+					<img id="work-hero-image" src={heroImage} alt={title} width="1600" height="1200" />
+					<button class="work-detail__zoom" type="button" data-open-lightbox>
+						查看大图
+					</button>
 				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
+
+				<div class="work-detail__intro">
+					<div>
+						<p class="section-heading__label">Project</p>
 						<h1>{title}</h1>
-						<hr />
+						<p class="work-detail__description">{description}</p>
 					</div>
-					<slot />
+
+					<div class="work-meta">
+						{published && (
+							<div>
+								<span>时间</span>
+								<strong>{published}</strong>
+							</div>
+						)}
+						{client && (
+							<div>
+								<span>项目</span>
+								<strong>{client}</strong>
+							</div>
+						)}
+						{updated && (
+							<div>
+								<span>更新</span>
+								<strong>{updated}</strong>
+							</div>
+						)}
+					</div>
+				</div>
+
+				{tags.length > 0 && (
+					<div class="chip-list">
+						{tags.map((tag) => <span class="chip">{tag}</span>)}
+					</div>
+				)}
+
+				<div class="work-detail__content">
+					<div class="prose">
+						<slot />
+					</div>
+
+					<aside class="work-sidebar">
+						{tools.length > 0 && (
+							<section class="work-panel">
+								<h2>使用工具</h2>
+								<div class="chip-list">
+									{tools.map((tool) => <span class="chip chip--soft">{tool}</span>)}
+								</div>
+							</section>
+						)}
+
+						{prompt && (
+							<section class="work-panel">
+								<h2>提示词 / Prompt</h2>
+								<pre><code>{prompt}</code></pre>
+							</section>
+						)}
+					</aside>
 				</div>
 			</article>
 		</main>
+
+		<dialog class="lightbox" data-lightbox>
+			<button class="lightbox__close" type="button" data-close-lightbox>关闭</button>
+			<img src={heroImage} alt={title} width="2000" height="1500" />
+		</dialog>
+
+		<script>
+			const dialog = document.querySelector("[data-lightbox]");
+			const openButton = document.querySelector("[data-open-lightbox]");
+			const closeButton = document.querySelector("[data-close-lightbox]");
+			if (dialog instanceof HTMLDialogElement && openButton && closeButton) {
+				openButton.addEventListener("click", () => dialog.showModal());
+				closeButton.addEventListener("click", () => dialog.close());
+				dialog.addEventListener("click", (event) => {
+					const target = event.target;
+					if (target === dialog) dialog.close();
+				});
+			}
+		</script>
 		<Footer />
 	</body>
 </html>

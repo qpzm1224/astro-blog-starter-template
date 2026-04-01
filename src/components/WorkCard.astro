@@ -1,0 +1,30 @@
+---
+import type { GalleryImage } from "../utils/gallery";
+
+type Props = {
+	image: GalleryImage;
+	index?: number;
+};
+
+const { image, index = 0 } = Astro.props;
+---
+
+<a
+	class="work-card"
+	href={image.src}
+	data-lightbox
+	data-lightbox-src={image.src}
+	data-lightbox-alt={image.alt}
+	style={`--card-index:${index};`}
+>
+	<div class="work-card__frame">
+		<img
+			class="work-card__image"
+			src={image.src}
+			alt={image.alt}
+			width="1200"
+			height="1600"
+			loading="lazy"
+		/>
+	</div>
+</a>
